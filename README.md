@@ -34,7 +34,9 @@ dotnet ef database update --project WebUI
 ```
 
 5.Oluşması gereken database ve tablolar.
+
 ![GitHub Logo](https://i.ibb.co/54Njqgc/Invicti-Health-Monitoring.png)
+
 ![GitHub Logo](https://i.ibb.co/16C3F01/Invicti-Health-Background-Jobs.png)
 
 6.Gönderici mail ayarlarını appsettings.json dosyasında tanımlayın.
@@ -55,6 +57,7 @@ Email : invicti@security.com
 Pw : .Ii123456
 
 Normal
+
 Email : servetseker@security.com
 Pw : .Ss123456
 
