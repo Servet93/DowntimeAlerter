@@ -1,0 +1,79 @@
+﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Xsrf
+@functions{
+    public string GetAntiXsrfRequestToken()
+    {
+        return Xsrf.GetAndStoreTokens(Context).RequestToken;
+    }
+}
+
+@model UpdateAppViewModel
+<div class="modal-dialog" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Update Application</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <form id="updateApplicationForm" onsubmit="false;">
+                        <input type="hidden" asp-for="AppId"/>
+                        <div class="form-group">
+                            <label asp-for="AppName">App Name</label>
+                            <input asp-for="AppName" class="form-control" placeholder="Enter App Name" />
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="AppUrl">App Url</label>
+                            <input asp-for="AppUrl" type="url" class="form-control" placeholder="Enter App Url" />
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="AppRequestIntervalAtMinute">App Request Interval At Minute</label>
+                            <input asp-for="AppRequestIntervalAtMinute" type="number" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <button id="updateApp" type="button" class="btn btn-primary">Update App</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$("#updateApp").click(function () {
+     Swal.fire({
+        title: "Are you sure?",
+        icon: 'warning',
+        showCloseButton: true,
+        showCancelButton: true,
+        confirmButtonText: "Update",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            var form = $("#updateApplicationForm");
+            $.ajax({
+                url: '@Url.Action("Update", "Application")',
+                type: 'PUT',
+                headers: {
+                    'CSRF-TOKEN-INVICTI': "@GetAntiXsrfRequestToken()"
+                },
+                data: {
+                    "AppId": @Model.AppId,
+                    "AppName": $("#AppName").val(),
+                    "AppUrl": $("#AppUrl").val(),
+                    "AppRequestIntervalAtMinute": $("#AppRequestIntervalAtMinute").val(),
+                },
+                success: function (result) {
+                    Swal.fire('Updated!', '', 'success');
+                    $("#tblApps").DataTable().ajax.reload(null, false);
+                },
+                error: function () {
+                    Swal.fire('Error!', '', 'error');
+                },
+            });
+        }
+    });
+});
+</script>

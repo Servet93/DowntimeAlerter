@@ -1,0 +1,444 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Xsrf
+@functions{
+    public string GetAntiXsrfRequestToken()
+    {
+        return Xsrf.GetAndStoreTokens(Context).RequestToken;
+    }
+}
+
+<div class="text-center">
+    <h5 class="display-4">Health Monitoring</h5>
+    <img src="https://media1.giphy.com/media/9Y5ul0k4mrrDGRBXf9/source.gif" width="500" height="300" />
+    <p></p>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <form id="queryForm" asp-controller="Home" asp-action="RequestToSite">
+                <div class="input-group mb-3">
+                    <input type="url" id="url" required name="url" class="form-control" placeholder="Url" aria-describedby="button-addon2">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" id="btnQuery">Query</button>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <button class="btn btn-danger ml-1 view" type="button" data-target="@Url.Action("GetCreateView", "Application")">Create App</button>
+                        }
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="containerProgress" class="row justify-content-center d-none">
+        <div class="col-md-4">
+            <div class="spinner-grow text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <div class="spinner-grow text-secondary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <div class="spinner-grow text-success" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <div class="spinner-grow text-danger" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <div class="spinner-grow text-warning" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <div class="spinner-grow text-info" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <div class="spinner-grow text-dark" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="containerSuccessMessage" class="row justify-content-center mt-2 d-none">
+        <div class="col-md-8">
+            <div class="alert alert-success" role="alert">
+                <h4 class="alert-heading">Working!</h4>
+                <p>Aww yeah, you successfully read this important alert message. This example text is going to run a bit longer so that you can see how spacing within an alert works with this kind of content.</p>
+                <hr>
+                <p class="mb-0">Whenever you need to, be sure to use margin utilities to keep things nice and tidy.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="containerErrorMessage" class="row justify-content-center mt-2 d-none">
+        <div class="col-md-8">
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-heading">Not Working!</h4>
+                <p>Aww yeah, you successfully read this important alert message. This example text is going to run a bit longer so that you can see how spacing within an alert works with this kind of content.</p>
+                <hr>
+                <p class="mb-0">Whenever you need to, be sure to use margin utilities to keep things nice and tidy.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+@if (User.Identity.IsAuthenticated)
+{
+    <div class="container mt-5">
+        <table id="tblApps" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>App Name</th>
+                    <th>App Url</th>
+                    <th>Request Interval At Minute</th>
+                    <th>Total Request</th>
+                    <th>Success Request</th>
+                    <th>Fail Request</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+
+    <div class="modal" tabindex="-1" role="dialog" id="modelView"></div>
+}
+
+@section Styles{
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css" />
+}
+
+@section Scripts{
+    <script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+    <script>
+            $('#btnQuery').click(function (e) {
+                //validation
+
+                //ui prepare
+                $('#btnQuery').attr("disabled", "disabled");
+                $('#containerSuccessMessage').addClass("d-none");
+                $('#containerErrorMessage').addClass("d-none");
+                $('#containerProgress').removeClass("d-none");
+
+                var form = $('#queryForm');
+                var token = $('input[name="CSRF-TOKEN-INVICTI-FORM"]', form).val();
+                $.ajax({
+                    url: '@Url.Action("RequestToSite", "Home")',
+                    type: 'POST',
+                    data: form.serialize(),
+                    success: function (result) {
+                        $("#containerSuccessMessage").removeClass("d-none");
+                    },
+                    error: function () {
+                        $("#containerErrorMessage").removeClass("d-none");
+
+                    },
+                    complete: function () {
+                        $('#btnQuery').removeAttr("disabled");
+                        $('#containerProgress').addClass("d-none");
+                    }
+                });
+            });
+    </script>
+    @if (User.Identity.IsAuthenticated)
+    {
+        <script>
+
+        var tblApps = null;
+        $(document).ready(function () {
+
+            tblApps = $('#tblApps').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "paging": true,
+                "orderable": false,
+                "ajax": {
+                    "url": "@Url.Action("GetAll", "Application")",
+                    "type": "POST",
+                    "datatype": "json",
+                    headers: {
+                        'CSRF-TOKEN-INVICTI': "@GetAntiXsrfRequestToken()"
+                    }
+                },
+                "columnDefs": [
+                    {
+                    "targets": [0],
+                    "visible": false,
+                    "searchable": false
+                    },
+                    {
+                        "targets": [1],
+                        "orderable": false
+                    },
+                    {
+                        "targets": [2],
+                        "orderable": false
+                    },
+                    {
+                        "targets": [3],
+                        "width": "20px",
+                        "orderable": false
+                    },
+                    {
+                        "targets": [4],
+                        "orderable": false
+                    },
+                    {
+                        "targets": [5],
+                        "orderable": false
+                    },
+                    {
+                        "targets": [6],
+                        "orderable": false
+                    },
+                    {
+                        "targets": [7],
+                        "render": function (data, type, row) {
+                            var appStatus = row.isRun ? "<i class='fa fa-stop'></i>" : "<i class='fa fa-play'></i>";
+                            var btnStatusClass = row.isRun ? "btn-secondary" : "btn-danger";
+                            var btnDeleteApp = "<button class='btn-sm " + btnStatusClass + "' id='btnDeleteApp" + row.id + "' onclick='deleteApp(" + row.id + ");'><i class='fa fa-trash-o'></i></button>";
+                            var btnUpdateApp = "<button class='btn-sm " + btnStatusClass +" ml-1 view' id='btnUpdateApp" + row.id + "' data-target='@Url.Action("GetUpdateView", "Application")/" + row.id + "'><i class='fa fa-edit'></i></button>";
+                            var appStatusId = "appStatus" + row.id;
+                            var btnIsRun = "<button href='#' class='btn-sm btn-danger ml-1' data-status='" + row.isRun + "' id='" + appStatusId + "' onclick='toggleApp(" + row.id + ");' >" + appStatus + "</button>";
+
+                            var btnEmailManagementApp = "<button href='#' class='btn-sm btn-info ml-1 view' data-target='@Url.Action("GetEmailManagementView", "Application")/" + row.id + "'><i class='fa fa-mail-forward'></i></button>";
+
+                            var returnHtml = btnDeleteApp + btnUpdateApp + btnIsRun + btnEmailManagementApp;
+
+                            return returnHtml;
+                        }
+                    }
+                ],
+                "columns": [
+                    { "data": "id", "name": "Id" },
+                    { "data": "name", "name": "Name"  },
+                    { "data": "url", "name": "Url", "className": "px200" },
+                    { "data": "requestIntervalAtMinute", "name": "RequestIntervalAtMinute", "autoWidth": true},
+                    { "data": "totalRequest", "name": "TotalRequest"},
+                    { "data": "successRequest", "name": "SuccessRequest"},
+                    { "data": "failRequest", "name": "FailRequest"},
+                    { "name": "Actions" },
+                ]
+            });
+
+            // Call datatables, and return the API to the variable for use in our code
+            // Binds datatables to all elements with a class of datatable
+            var dtable = $("#tblApps").dataTable().api();
+
+            // Grab the datatables input box and alter how it is bound to events
+            $("#tblApps_filter input")
+                .unbind() // Unbind previous default bindings
+                .bind("input", function (e) { // Bind our desired behavior
+                    // If the length is 3 or more characters, or the user pressed ENTER, search
+                    if (this.value.length >= 3) {
+                        // Call the API search function
+                        dtable.search(this.value).draw();
+                    }
+                    // Ensure we clear the search if they backspace far enough
+                    if (this.value == "") {
+                        dtable.search("").draw();
+                    }
+                    return;
+                });
+
+            $("body").on("click", ".view", function () {
+
+                //data-target dan url mizi al
+                var url = $(this).data("target");
+                /*
+                //bu urlimizi post et
+                $.post(url, function (data) { })
+                    //eğer işlemimiz başarılı bir şekilde gerçekleşirse
+                    .done(function (data) {
+                        //gelen datayı .modal-body mizin içerise html olarak ekle
+                        $("#modelView").html(data);
+                        //sonra da modalimizi göster
+                        $("#modelView").modal("show");
+                    })
+                    //eğer işlem başarısız olursa
+                    .fail(function () {
+                        //modalımızın bodysine Error! yaz
+                        $("#modelView").text("Error!!");
+                        //sonra da modalimizi göster
+                        $("#modelView").modal("show");
+                    })
+                */
+
+                 $.ajax({
+                        "url": url,
+                        "type": 'POST',
+                        "headers": {
+                            'CSRF-TOKEN-INVICTI': "@GetAntiXsrfRequestToken()"
+                        },
+                        success: function (result) {
+                            $("#modelView").html(result);
+                            //sonra da modalimizi göster
+                            $("#modelView").modal("show");
+                        },
+                        error: function () {
+                            //modalımızın bodysine Error! yaz
+                            $("#modelView").text("Error!!");
+                            //sonra da modalimizi göster
+                            $("#modelView").modal("show");
+                        }
+                    });
+
+            });
+
+
+
+            setInterval(function () {
+                tblApps.ajax.reload(null, false);
+            }, 1000 * 60);
+
+        });
+
+        function prepareUI(id,isRun)
+        {
+            if (isRun) {
+                $("#appStatus" + id).html("<i class='fa fa-stop'></i>");
+                $("#btnDeleteApp" + id).removeClass("btn-danger").addClass("btn-secondary");
+                $("#btnUpdateApp" + id).removeClass("btn-danger").addClass("btn-secondary");
+                $("#btnDeleteApp" + id).attr("disabled", "disabled");
+                $("#btnUpdateApp" + id).attr("disabled", "disabled");
+                $("#appStatus" + id).data("status", true);
+            } else {
+                $("#appStatus" + id).html("<i class='fa fa-play'></i>");
+                $("#btnDeleteApp" + id).removeClass("btn-secondary").addClass("btn-danger");
+                $("#btnUpdateApp" + id).removeClass("btn-secondary").addClass("btn-danger");
+                $("#btnDeleteApp" + id).removeAttr("disabled");
+                $("#btnUpdateApp" + id).removeAttr("disabled");
+                $("#appStatus" + id).data("status", false);
+            }
+
+        }
+
+            function toggleApp(id) {
+
+            var isRun = $("#appStatus" + id).data("status");
+
+            if (isRun) {
+                stopApp(id);
+            } else {
+                runApp(id);
+            }
+        }
+
+            function runApp(id) {
+
+            Swal.fire({
+                title: "Are you sure?",
+                //text: "Once deleted, you will not be able to recover this app",
+                icon: "info",
+                buttons: true,
+                dangerMode: true,
+                showCloseButton: true,
+                showCancelButton: true,
+                confirmButtonText: "Run",
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("Run", "Application")',
+                        type: 'POST',
+                        headers: {
+                            'CSRF-TOKEN-INVICTI': "@GetAntiXsrfRequestToken()"
+                        },
+                        data: {
+                            "id": id,
+                        },
+                        success: function (result) {
+                            Swal.fire('Run!', '', 'success');
+                            prepareUI(id, true);
+                        },
+                        error: function () {
+                            Swal.fire('Error!', '', 'error');
+                        }
+                    });
+                } else {
+
+                }
+            });
+        }
+
+            function stopApp(id) {
+
+            Swal.fire({
+                title: "Are you sure?",
+                //text: "Once deleted, you will not be able to recover this app",
+                icon: "info",
+                buttons: true,
+                dangerMode: true,
+                showCloseButton: true,
+                showCancelButton: true,
+                confirmButtonText: "Stop",
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("Stop", "Application")',
+                        type: 'POST',
+                        headers: {
+                            'CSRF-TOKEN-INVICTI': "@GetAntiXsrfRequestToken()"
+                        },
+                        data: {
+                            "id": id,
+                        },
+                        success: function (result) {
+                            Swal.fire('Stop!', '', 'success');
+                            prepareUI(id, false);
+
+                        },
+                        error: function () {
+                            Swal.fire('Error!', '', 'error');
+                        }
+                    });
+                } else {
+
+                }
+            });
+        }
+
+            function deleteApp(id) {
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "Once deleted, you will not be able to recover this app",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+                showCloseButton: true,
+                showCancelButton: true,
+                confirmButtonText: "Delete",
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("Delete", "Application")',
+                        type: 'DELETE',
+                        data: {
+                            "CSRF-TOKEN-INVICTI-FORM":  "@GetAntiXsrfRequestToken()",
+                            "id": id,
+                        },
+                        success: function (result) {
+                            Swal.fire('Deleted!', '', 'success');
+                            tblApps.ajax.reload(null, false);
+                        },
+                        error: function () {
+                            Swal.fire('Not Deleted!', '', 'error');
+                        }
+                    });
+                } else {
+
+                }
+            });
+        }
+        </script>
+
+    }
+}
+
+
+

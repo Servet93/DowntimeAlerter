@@ -1,0 +1,100 @@
+﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Xsrf
+@functions{
+    public string GetAntiXsrfRequestToken()
+    {
+        return Xsrf.GetAndStoreTokens(Context).RequestToken;
+    }
+}
+
+@model EmailManagementModelView
+<div class="modal-dialog" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Mail Management</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <form id="addEmailForm">
+                        <div class="input-group mb-3">
+                            <input asp-for="Email" required type="email" class="form-control" placeholder="Email" aria-describedby="button-addon2">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="btnAddEmail">Add</button>
+                            </div>
+                        </div>
+                        <div class="input-group mb-3">
+                            <select id="drpEmail" class="select2-container" asp-items="Model.Emails"></select>
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-danger" type="button" id="btnDeleteEmail">Delete</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $("#btnAddEmail").click(function () {
+        Swal.fire({
+            title: "Are you sure?",
+            icon: 'warning',
+            showCloseButton: true,
+            showCancelButton: true,
+            confirmButtonText: "Create",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '@Url.Action("AddEmail", "Application")',
+                    type: 'POST',
+                    data: {
+                        "appId": "@Model.AppId",
+                        "email": $("#Email").val(),
+                        "CSRF-TOKEN-INVICTI-FORM": "@GetAntiXsrfRequestToken()",
+                    },
+                    success: function (result) {
+                        Swal.fire('Created!', '', 'success');
+                        $("#Email").val("");
+                        $("#drpEmail").append('<option value="' + result.value + '">' + result.text + '</option>');
+                    },
+                    error: function () {
+                        Swal.fire('Error!', '', 'error');
+                    },
+                });
+            }
+        });
+    });
+
+    $("#btnDeleteEmail").click(function () {
+        Swal.fire({
+            title: "Are you sure?",
+            icon: 'warning',
+            showCloseButton: true,
+            showCancelButton: true,
+            confirmButtonText: "Delete",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                alert($('#drpEmail').val());
+                $.ajax({
+                    url: '@Url.Action("DeleteEmail", "Application")',
+                    type: 'DELETE',
+                    data: {
+                        "id": $('#drpEmail').val(),
+                        "CSRF-TOKEN-INVICTI-FORM": "@GetAntiXsrfRequestToken()",
+                    },
+                    success: function (result) {
+                        Swal.fire('Deleted!', '', 'success');
+                        $("#drpEmail option[value='"+$('#drpEmail').val()+"']").remove();
+                    },
+                    error: function () {
+                        Swal.fire('Error!', '', 'error');
+                    },
+                });
+            }
+        });
+    });
+</script>
