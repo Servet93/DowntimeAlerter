@@ -4,11 +4,11 @@
 
 ## Kullanılanlar
 
-### Net Core MVC 3.1
-### Entity Framework 3.1.8
-### HangFire 1.7.14
-### MailKit,MimeKit 2.9.2
-### NLog 4.7.5
+##### Net Core MVC 3.1
+##### Entity Framework 3.1.8
+##### HangFire 1.7.14
+##### MailKit,MimeKit 2.9.2
+##### NLog 4.7.5
 
 ## Kurulum
 
