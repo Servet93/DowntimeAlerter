@@ -1,15 +1,14 @@
-# DowntimeAlerter
-
-# Invicti Security Health Monitoring
+# DowntimeAlerter / Invicti Security Health Monitoring
 
 Çok kullanıcılı, girilen uygulamaların çalışır durumda olup olmadığını kontrol eder.
 
 ## Kullanılanlar
--Net Core MVC 3.1
--Entity Framework 3.1.8
--HangFire 1.7.14
--MailKit,MimeKit 2.9.2
--NLog 4.7.5
+
+### Net Core MVC 3.1
+### Entity Framework 3.1.8
+### HangFire 1.7.14
+### MailKit,MimeKit 2.9.2
+### NLog 4.7.5
 
 ## Kurulum
 
@@ -25,10 +24,14 @@
     },
 ```
 3.Migrationları oluşturmak için PackageManagerda veya komut satırında aşağıdaki komutu çalıştırın.
+```
 dotnet ef migrations add "init" --project WebUI --output-dir Infrastructure\Migrations
+```
 
 4.Oluşan model ve datanın verabanına yansıması için aşağıdaki komutu çalıştırın.
+```
 dotnet ef database update --project WebUI
+```
 
 5.Oluşması gereken database ve tablolar.
 ![GitHub Logo](https://i.ibb.co/54Njqgc/Invicti-Health-Monitoring.png)
