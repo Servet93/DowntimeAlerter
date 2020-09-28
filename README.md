@@ -9,6 +9,8 @@
 ##### HangFire 1.7.14
 ##### MailKit,MimeKit 2.9.2
 ##### NLog 4.7.5
+##### JQuery Datatable 1.10.22
+##### Sweet Alert 2
 
 ## Kurulum
 
